@@ -133,6 +133,16 @@ func main() {
 				return err
 			}
 
+			// iamOidcProvider, err := eks.NewIdentityProviderConfig(ctx, "iam-oidc-provicer", &eks.IdentityProviderConfigArgs{
+			// 	ClusterName: eksCluster.Name,	
+			// })
+			// if err != nil {
+			// 	return err
+			// }
+			// if iamOidcProvider == nil {
+			// 	return err
+			// }
+
 			nodeGroup, err := eks.NewNodeGroup(ctx, fmt.Sprintf("%s-aws-demo-node-group", env), &eks.NodeGroupArgs{
 				ClusterName:   eksCluster.Name,
 				NodeGroupName: pulumi.String(fmt.Sprintf("%s-aws-demo-node-group", env)),
@@ -184,6 +194,23 @@ func main() {
 				},
 			}, pulumi.Provider(k8sProvider), pulumi.DependsOn([]pulumi.Resource{argocdNamespace}))
 			if err1 != nil {
+				return err
+			}
+
+			_, err3 := helm.NewChart(ctx, fmt.Sprintf("%s-argo-rollouts", env), helm.ChartArgs{
+				Chart:     pulumi.String("argo-rollouts"),
+				Namespace: pulumi.String("argocd"),
+				ResourcePrefix: env,
+				FetchArgs: helm.FetchArgs{
+					Repo: pulumi.String("https://argoproj.github.io/argo-helm"),
+				},
+				Values: pulumi.Map{
+					"dashboard": pulumi.Map{
+						"enabled": pulumi.String("true"),
+						},
+				},
+			}, pulumi.Provider(k8sProvider), pulumi.DependsOn([]pulumi.Resource{argocdNamespace}))
+			if err3 != nil {
 				return err
 			}
 
