@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/pulumi/pulumi-aws/sdk/go/aws/ec2"
+	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/ec2"
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/iam"
 	"github.com/pulumi/pulumi-eks/sdk/go/eks"
 	k8s "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes"
@@ -124,6 +124,8 @@ func main() {
 			cluster, err := eks.NewCluster(ctx, fmt.Sprintf("%s-aws-demo", env), &eks.ClusterArgs{
 				SkipDefaultNodeGroup: pulumi.Bool(true),
 				CreateOidcProvider:   pulumi.Bool(true),
+				VpcId:                pulumi.String(vpc.Id),
+				SubnetIds:            toPulumiStringArray(subnet.Ids),
 			})
 			if err != nil {
 				return err
@@ -266,4 +268,12 @@ func main() {
 		}
 		return nil
 	})
+}
+
+func toPulumiStringArray(a []string) pulumi.StringArrayInput {
+	var res []pulumi.StringInput
+	for _, s := range a {
+		res = append(res, pulumi.String(s))
+	}
+	return pulumi.StringArray(res)
 }
